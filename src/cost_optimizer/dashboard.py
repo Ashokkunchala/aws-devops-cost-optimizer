@@ -133,6 +133,7 @@ h1{font-size:clamp(20px,2.2vw,32px);letter-spacing:.17em;text-align:center;color
 </style></head><body><div class="shell">
 <header class="topbar"><div class="brand"><div class="brand-icon"><span>⌁</span></div><div>AWS FINOPS<br><span style="font-size:10px;color:#7b9fb7;letter-spacing:.24em">COST INTELLIGENCE</span></div></div>
 <div class="topmeta"><span class="live">● READ-ONLY SCAN</span><br>ACCOUNT: """ + account + """<br>REGION: """ + region + """ · MODE: """ + mode + """<br>GENERATED: """ + generated + """</div></header>
+""" + source_banner + """
 <div class="layout">
 <aside class="leftcol">
 <section class="panel"><div class="panel-head">Dimensions <span>⌃</span></div><div class="panel-body"><span class="filter-label">GROUP BY</span><div class="fake-select">Primary · Account <span>⌄</span></div><div class="fake-select" style="margin-top:6px">Secondary · Environment <span>⌄</span></div><span class="filter-label">ACTIVE SCAN</span><div class="chip">Region: """ + region + """</div><div class="chip">Read-only</div><div class="chip">Human review</div><div class="tiny" style="margin-top:14px">This report is a snapshot. Interactive AWS filters are not applied by this static HTML file.</div></div></section>
