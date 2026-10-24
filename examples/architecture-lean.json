@@ -1,0 +1,18 @@
+{
+  "name": "Lean scheduled demo stack",
+  "currency": "USD",
+  "components": {
+    "compute": 55,
+    "database": 35,
+    "storage": 10,
+    "load_balancing": 0,
+    "nat_and_endpoints": 0,
+    "data_transfer": 5,
+    "logs_and_metrics": 6,
+    "security": 5,
+    "backup": 5,
+    "dns": 1,
+    "support": 0,
+    "other": 0
+  }
+}
