@@ -33,4 +33,4 @@ Configure an approved SSO or role-assumption profile, then verify identity:
 
     aws sts get-caller-identity --profile cost-audit
 
-The CPU collector requests hourly averages/maxima over 1–90 days for each running instance. Cost Explorer uses monthly UnblendedCost groups by service; its End date is exclusive. The tool does not call StopInstances, ModifyInstanceAttribute, DeleteVolume, DetachVolume, or any mutation API.
+The CPU collector requests hourly averages/maxima over 1–90 days for each running instance. Cost Explorer uses monthly UnblendedCost grouped by service; its End date is exclusive. The tool does not call StopInstances, ModifyInstanceAttribute, DeleteVolume, DetachVolume, or any mutation API.
