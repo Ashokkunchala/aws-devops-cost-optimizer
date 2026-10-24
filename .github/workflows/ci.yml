@@ -30,4 +30,4 @@ jobs:
       - name: Test
         run: pytest
       - name: Sample smoke test
-        run: python -m cost_optimizer --input examples/sample_inventory.json --output /tmp/report.json
+        run: python -m cost_optimizer --input examples/sample_inventory.json --output /tmp/report.json --html-output /tmp/report.html
