@@ -33,6 +33,9 @@ def render_html(report: dict[str, Any]) -> str:
     generated = _e(report.get("generated_at", ""))
     region = _e(report.get("region") or "not specified")
     mode = _e(report.get("mode", "unknown"))
+    account = _e(report.get("account_id") or (report.get("scan_metadata") or {}).get("account_id") or "not available")
+    synthetic = report.get("source_mode") == "local_fixture" or report.get("mode") == "local_fixture"
+    source_banner = ('<div class="notice" style="border-color:#ffb454;color:#ffd59a">DEMO DATA — synthetic fixture only. These are not live AWS resources.</div>' if synthetic else '<div class="notice">LIVE SCAN SNAPSHOT — account and region shown below. Inventory is regional; Cost Explorer service costs are account-level for the selected dates. No AWS resources are changed.</div>')
     period = ""
     if costs:
         period = f"{_e(costs.get('start_date', ''))} → {_e(costs.get('end_date_exclusive', ''))} (end exclusive)"
@@ -129,7 +132,7 @@ h1{font-size:clamp(20px,2.2vw,32px);letter-spacing:.17em;text-align:center;color
 @media(max-width:460px){.leftcol{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:11px}.kpi-value{font-size:18px}.brand{font-size:11px}.findings{min-width:680px}}
 </style></head><body><div class="shell">
 <header class="topbar"><div class="brand"><div class="brand-icon"><span>⌁</span></div><div>AWS FINOPS<br><span style="font-size:10px;color:#7b9fb7;letter-spacing:.24em">COST INTELLIGENCE</span></div></div>
-<div class="topmeta"><span class="live">● READ-ONLY SCAN</span><br>REGION: """ + region + """ · MODE: """ + mode + """<br>GENERATED: """ + generated + """</div></header>
+<div class="topmeta"><span class="live">● READ-ONLY SCAN</span><br>ACCOUNT: """ + account + """<br>REGION: """ + region + """ · MODE: """ + mode + """<br>GENERATED: """ + generated + """</div></header>
 <div class="layout">
 <aside class="leftcol">
 <section class="panel"><div class="panel-head">Dimensions <span>⌃</span></div><div class="panel-body"><span class="filter-label">GROUP BY</span><div class="fake-select">Primary · Account <span>⌄</span></div><div class="fake-select" style="margin-top:6px">Secondary · Environment <span>⌄</span></div><span class="filter-label">ACTIVE SCAN</span><div class="chip">Region: """ + region + """</div><div class="chip">Read-only</div><div class="chip">Human review</div><div class="tiny" style="margin-top:14px">This report is a snapshot. Interactive AWS filters are not applied by this static HTML file.</div></div></section>
@@ -158,5 +161,5 @@ h1{font-size:clamp(20px,2.2vw,32px);letter-spacing:.17em;text-align:center;color
 </div></section>
 <section class="panel"><div class="panel-head">Recent insights</div><div class="panel-body"><div class="alert"><span class="alert-icon">▣</span><div><strong class="sev-info">Billing</strong><p>""" + ("Actual cost data is included." if costs else "Run with --cost-explorer to load actual cost data.") + """</p></div></div><div class="alert"><span class="alert-icon">⌁</span><div><strong class="sev-info">Resource review</strong><p>Use the findings table to inspect each recommendation before taking action.</p></div></div><div class="alert"><span class="alert-icon">✓</span><div><strong class="sev-info">Safety status</strong><p>Mutations performed: no. Human review required: yes.</p></div></div></div></section>
 </aside>
-</div><footer class="footnote"><span>DATA AS OF: """ + generated + """ · REGION: """ + region + """</span><span>Mutations performed: no · Human review required: yes · Review before action</span></footer></div></body></html>
+</div><footer class="footnote"><span>DATA AS OF: """ + generated + """ · ACCOUNT: """ + account + """ · REGION: """ + region + """</span><span>Mutations performed: no · Human review required: yes · Review before action</span></footer></div></body></html>
 """
