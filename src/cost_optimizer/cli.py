@@ -11,6 +11,7 @@ from typing import Any
 
 from cost_optimizer.aws_inventory import collect_all_regions, collect_inventory
 from cost_optimizer.cost_explorer import get_cost_summary
+from cost_optimizer.cost_lab import audit_integration_gaps, compare_architectures, environment_blueprint
 from cost_optimizer.dashboard import render_html
 from cost_optimizer.report import build_report
 from cost_optimizer.rules import analyze_inventory
@@ -66,9 +67,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Read-only AWS cost optimizer. Live scans are snapshots; no resource mutations."
     )
-    source = parser.add_mutually_exclusive_group(required=True)
+    source = parser.add_mutually_exclusive_group(required=False)
     source.add_argument("--input", type=Path, help="Local JSON fixture (synthetic/demo mode).")
     source.add_argument("--aws", action="store_true", help="Collect read-only AWS inventory.")
+    source.add_argument("--compare-architectures", nargs=2, type=Path, metavar=("CURRENT_JSON", "ALTERNATIVE_JSON"), help="Compare two architecture cost models (all monthly components required for a savings delta).")
+    source.add_argument("--environment-blueprint", choices=["dev", "test", "staging", "production"], help="Print low-cost design guidance for an environment.")
+    source.add_argument("--integration-audit", nargs=2, type=Path, metavar=("INVENTORY_JSON", "BILLING_JSON"), help="Compare discovered/integrated service families with Cost Explorer service rows.")
     parser.add_argument("--profile", help="AWS CLI profile name for AWS mode.")
     parser.add_argument("--all-regions", action="store_true", help="Scan all regions returned by the AWS EC2 region catalog.")
     parser.add_argument("--region", default="ap-south-1", help="AWS region (default: ap-south-1).")
@@ -87,6 +91,22 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=Path("reports/cost-report.json"))
     parser.add_argument("--html-output", type=Path, help="Self-contained HTML dashboard output path.")
     args = parser.parse_args()
+    if not any((args.input, args.aws, args.compare_architectures, args.environment_blueprint, args.integration_audit)):
+        parser.error("Choose --input, --aws, --compare-architectures, --environment-blueprint, or --integration-audit")
+
+    if args.compare_architectures:
+        result = compare_architectures(_load_json(args.compare_architectures[0]), _load_json(args.compare_architectures[1]))
+        print(json.dumps(result, indent=2))
+        return
+    if args.environment_blueprint:
+        print(json.dumps(environment_blueprint(args.environment_blueprint), indent=2))
+        return
+    if args.integration_audit:
+        inventory = _load_json(args.integration_audit[0])
+        billing = _load_json(args.integration_audit[1])
+        result = audit_integration_gaps(inventory, billing.get("by_service", []))
+        print(json.dumps(result, indent=2))
+        return
 
     if not 0.0 <= args.cpu_low_threshold <= 100.0:
         parser.error("--cpu-low-threshold must be between 0 and 100")
