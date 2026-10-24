@@ -1,13 +1,13 @@
 """Report rendering helpers."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
 def build_report(payload: dict[str, Any], findings: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "schema_version": "1.0",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "mode": payload.get("mode", "local_fixture"),
         "region": payload.get("region"),
         "summary": {
