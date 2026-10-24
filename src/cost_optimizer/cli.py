@@ -112,6 +112,7 @@ def main() -> None:
 
     def scan_once() -> None:
         payload = collect_inventory(args.profile, args.region, args.lookback_days)
+        payload["dashboard_refresh_seconds"] = args.refresh_seconds if args.watch else None
         if args.cost_explorer:
             payload["cost_explorer"] = get_cost_summary(
                 args.profile, args.cost_start_date, args.cost_end_date
