@@ -31,3 +31,6 @@ jobs:
         run: pytest
       - name: Sample smoke test
         run: python -m cost_optimizer --input examples/sample_inventory.json --output /tmp/report.json --html-output /tmp/report.html
+      - name: Container build smoke test
+        if: matrix.python-version == '3.12'
+        run: docker build -t aws-devops-cost-optimizer:ci .

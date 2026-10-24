@@ -11,7 +11,7 @@ A free-first, safety-first FinOps toolkit for AWS and DevOps teams. It inventori
 - Optional AWS Cost Explorer actual UnblendedCost by service.
 - JSON output and optional HTML report with escaped resource values.
 - Least-privilege guidance, unit tests, and GitHub Actions CI.
-- Optional Terraform monthly budget alert example, never auto-applied.
+- Optional Terraform monthly budget alert example, never auto-applied.\n- Non-root Docker image for local or approved read-only AWS scans.
 
 ## Quick start without AWS
 
@@ -59,7 +59,7 @@ See docs/iam-read-only.md. Keep billing access optional and separate from invent
 - examples/ — synthetic fixtures.
 - tests/ — unit tests; no live cloud calls.
 - docs/ — safety and IAM guidance.
-- terraform/budget-alert/ — optional budget notification example.
+- terraform/budget-alert/ — optional budget notification example.\n- Dockerfile and docs/container-run.md — containerized CLI.
 
 ## Safety
 
