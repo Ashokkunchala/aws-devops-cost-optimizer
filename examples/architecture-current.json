@@ -1,0 +1,18 @@
+{
+  "name": "Current always-on demo stack",
+  "currency": "USD",
+  "components": {
+    "compute": 120,
+    "database": 70,
+    "storage": 12,
+    "load_balancing": 22,
+    "nat_and_endpoints": 35,
+    "data_transfer": 8,
+    "logs_and_metrics": 15,
+    "security": 5,
+    "backup": 8,
+    "dns": 1,
+    "support": 0,
+    "other": 0
+  }
+}
