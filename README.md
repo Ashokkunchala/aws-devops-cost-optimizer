@@ -6,7 +6,7 @@ A free-first, safety-first FinOps toolkit for AWS and DevOps teams. It helps ide
 
 ## Goals
 
-- Find likely optimization opportunities for EC2 and EBS.
+- Find likely optimization opportunities for EC2 and EBS, including a CPU lookback signal.
 - Report candidates with evidence and caveats.
 - Run locally with synthetic data and no AWS resources.
 - Use least-privilege credentials, tests, and CI.
@@ -40,7 +40,7 @@ aws sts get-caller-identity --profile cost-audit
 python -m cost_optimizer --aws --profile cost-audit --region ap-south-1 --output reports/aws-report.json
 ```
 
-AWS mode uses EC2 Describe APIs only. Review AWS service pricing and API limits before repeated scans. Never use root credentials.
+AWS mode uses EC2 Describe APIs plus hourly CloudWatch CPU summaries for running instances over a bounded 1–90 day lookback. For example, add `--lookback-days 14`. This increases read API calls with instance count; review API limits and operational cadence. Low CPU is a review signal only, not sufficient evidence to resize. Never use root credentials.
 
 ## Report fields
 
@@ -66,7 +66,7 @@ Findings include resource ID, type, severity, evidence, recommendation, and esti
 ## Roadmap
 
 1. [x] Local JSON input, rule engine, JSON report, and tests.
-2. [x] Read-only EC2/EBS inventory collector.
+2. [x] Read-only EC2/EBS inventory and bounded hourly CPU lookback.
 3. [x] CI for tests and lint.
 4. [x] Optional budget-alert Terraform example.
 5. [ ] Parse Cost Explorer exports / CUR Athena results.
