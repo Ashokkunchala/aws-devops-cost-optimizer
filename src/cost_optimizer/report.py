@@ -21,6 +21,8 @@ def build_report(payload: dict[str, Any], findings: list[dict[str, Any]]) -> dic
             ),
         },
         "findings": findings,
+        "region_scan_errors": payload.get("region_scan_errors", []),
+        "regions_attempted": payload.get("regions_attempted", []),
         "safety": {"mutations_performed": False, "human_review_required": True},
     }
     if payload.get("cost_explorer"):
