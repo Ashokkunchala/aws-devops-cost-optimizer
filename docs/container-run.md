@@ -19,7 +19,7 @@ From the repository root, mount the source read-only and mount an output directo
       --output /reports/report.json \
       --html-output /reports/report.html
 
-On Windows PowerShell, replace $PWD with ${PWD} in volume paths. Ensure the reports directory is writable by the container's UID (10001 on typical Linux Docker installations); do not solve permissions by running the scanner as root in production.
+On Windows PowerShell, replace $PWD with ${PWD} in volume paths. On Linux, ensure the reports directory is writable by UID 10001 (for example, use chown 10001:10001 reports when appropriate). Do not solve permissions by running the scanner as root in production.
 
 ## Read-only AWS scan
 
@@ -27,7 +27,7 @@ Use an approved short-lived role or IAM Identity Center session. Mount only the 
 
     docker run --rm \
       -e AWS_PROFILE=cost-audit \
-      -v "$HOME/.aws:/home/app/.aws:ro" \
+      -v "$HOME/.aws:/app/.aws:ro" \
       -v "$PWD/reports:/reports" \
       aws-devops-cost-optimizer:local \
       --aws --profile cost-audit --region ap-south-1 \
