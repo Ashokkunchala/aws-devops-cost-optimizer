@@ -1,7 +1,11 @@
-"""Command-line interface for local fixtures and read-only AWS inventory."""
+"""CLI for synthetic fixtures and read-only AWS inventory scans."""
+
+from __future__ import annotations
 
 import argparse
 import json
+import time
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -25,27 +29,72 @@ def _load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _write_report(
+    payload: dict[str, Any], args: argparse.Namespace, *, source_mode: str
+) -> dict[str, Any]:
+    payload["cpu_low_threshold_percent"] = args.cpu_low_threshold
+    payload["generated_at"] = datetime.now(UTC).isoformat()
+    report = build_report(payload, analyze_inventory(payload))
+    report["source_mode"] = source_mode
+    report["scan_metadata"] = {
+        "generated_at": report["generated_at"],
+        "region": payload.get("region"),
+        "account_id": payload.get("account_id"),
+        "identity_arn": payload.get("identity_arn"),
+        "ec2_instances_scanned": len(payload.get("ec2_instances", [])),
+        "ebs_volumes_scanned": len(payload.get("ebs_volumes", [])),
+        "is_synthetic": source_mode == "local_fixture",
+    }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    if args.html_output:
+        args.html_output.parent.mkdir(parents=True, exist_ok=True)
+        args.html_output.write_text(render_html(report), encoding="utf-8")
+    print(
+        f"[{report['generated_at']}] mode={source_mode} region={payload.get('region', 'n/a')} "
+        f"account={payload.get('account_id', 'n/a')} "
+        f"ec2={len(payload.get('ec2_instances', []))} "
+        f"ebs={len(payload.get('ebs_volumes', []))} findings={len(report.get('findings', []))}"
+    )
+    print(f"JSON report: {args.output}")
+    if args.html_output:
+        print(f"HTML dashboard: {args.html_output}")
+    return report
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Read-only AWS cost optimization inventory.")
+    parser = argparse.ArgumentParser(
+        description="Read-only AWS cost optimizer. Live scans are snapshots; no resource mutations."
+    )
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument("--input", type=Path, help="Local JSON inventory fixture.")
+    source.add_argument("--input", type=Path, help="Local JSON fixture (synthetic/demo mode).")
     source.add_argument("--aws", action="store_true", help="Collect read-only AWS inventory.")
     parser.add_argument("--profile", help="AWS CLI profile name for AWS mode.")
     parser.add_argument("--region", default="ap-south-1", help="AWS region (default: ap-south-1).")
     parser.add_argument("--lookback-days", type=int, default=14,
-                        help="Hourly CloudWatch CPU lookback for AWS mode (1-90 days).")
+                        help="Hourly CloudWatch CPU lookback (1-90 days).")
     parser.add_argument("--cpu-low-threshold", type=float, default=5.0,
                         help="Flag CPU averages at or below this percentage (default: 5).")
     parser.add_argument("--cost-explorer", action="store_true",
-                        help="Include actual AWS Cost Explorer costs by service (read-only).")
+                        help="Include actual AWS Cost Explorer costs (read-only).")
     parser.add_argument("--cost-start-date", help="Cost Explorer start date, YYYY-MM-DD inclusive.")
     parser.add_argument("--cost-end-date", help="Cost Explorer end date, YYYY-MM-DD exclusive.")
+    parser.add_argument("--watch", action="store_true",
+                        help="Repeat AWS inventory scans until Ctrl+C; refresh interval defaults to 300 seconds.")
+    parser.add_argument("--refresh-seconds", type=int, default=300,
+                        help="Interval between --watch scans (minimum 60 seconds; default: 300).")
     parser.add_argument("--output", type=Path, default=Path("reports/cost-report.json"))
-    parser.add_argument("--html-output", type=Path, help="Optional self-contained HTML report path.")
+    parser.add_argument("--html-output", type=Path, help="Self-contained HTML dashboard output path.")
     args = parser.parse_args()
 
     if not 0.0 <= args.cpu_low_threshold <= 100.0:
         parser.error("--cpu-low-threshold must be between 0 and 100")
+    if args.aws and not 1 <= args.lookback_days <= 90:
+        parser.error("--lookback-days must be between 1 and 90")
+    if args.watch and not args.aws:
+        parser.error("--watch can only be used with --aws")
+    if args.watch and args.refresh_seconds < 60:
+        parser.error("--refresh-seconds must be at least 60 to avoid excessive AWS API calls")
     if args.cost_explorer:
         if not args.aws:
             parser.error("--cost-explorer can only be used with --aws")
@@ -54,29 +103,33 @@ def main() -> None:
     elif args.cost_start_date or args.cost_end_date:
         parser.error("Provide both cost dates together with --cost-explorer")
 
-    if args.aws:
-        if not 1 <= args.lookback_days <= 90:
-            parser.error("--lookback-days must be between 1 and 90")
+    if not args.aws:
+        payload = _load_json(args.input)
+        payload.setdefault("mode", "local_fixture")
+        _write_report(payload, args, source_mode="local_fixture")
+        print("NOTE: This is synthetic fixture data, not a live AWS scan.")
+        return
+
+    def scan_once() -> None:
         payload = collect_inventory(args.profile, args.region, args.lookback_days)
         if args.cost_explorer:
             payload["cost_explorer"] = get_cost_summary(
                 args.profile, args.cost_start_date, args.cost_end_date
             )
-    else:
-        payload = _load_json(args.input)
-        payload.setdefault("mode", "local_fixture")
+        _write_report(payload, args, source_mode="aws_read_only")
 
-    payload["cpu_low_threshold_percent"] = args.cpu_low_threshold
-    report = build_report(payload, analyze_inventory(payload))
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    if args.html_output:
-        args.html_output.parent.mkdir(parents=True, exist_ok=True)
-        args.html_output.write_text(render_html(report), encoding="utf-8")
-    print(json.dumps(report["summary"], indent=2))
-    print(f"JSON report written to {args.output}")
-    if args.html_output:
-        print(f"HTML report written to {args.html_output}")
+    if not args.watch:
+        scan_once()
+        return
+
+    print(f"Watch mode active: refreshing every {args.refresh_seconds}s. Press Ctrl+C to stop.")
+    try:
+        while True:
+            started = time.monotonic()
+            scan_once()
+            time.sleep(max(0, args.refresh_seconds - (time.monotonic() - started)))
+    except KeyboardInterrupt:
+        print("\nWatch mode stopped. Last report files are preserved.")
 
 
 if __name__ == "__main__":
