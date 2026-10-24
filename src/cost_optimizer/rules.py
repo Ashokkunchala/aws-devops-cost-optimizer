@@ -1,6 +1,7 @@
 """Deterministic, report-only optimization rules for normalized inventory."""
 
 from __future__ import annotations
+
 from typing import Any
 
 
