@@ -1,0 +1,16 @@
+{
+  "by_service": [
+    {
+      "service": "Amazon Elastic Compute Cloud - Compute",
+      "amount": 42.1
+    },
+    {
+      "service": "Amazon Relational Database Service",
+      "amount": 18.4
+    },
+    {
+      "service": "Amazon Virtual Private Cloud",
+      "amount": 11.2
+    }
+  ]
+}
