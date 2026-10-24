@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from cost_optimizer.aws_inventory import collect_inventory
+from cost_optimizer.aws_inventory import collect_all_regions, collect_inventory
 from cost_optimizer.cost_explorer import get_cost_summary
 from cost_optimizer.dashboard import render_html
 from cost_optimizer.report import build_report
@@ -70,6 +70,7 @@ def main() -> None:
     source.add_argument("--input", type=Path, help="Local JSON fixture (synthetic/demo mode).")
     source.add_argument("--aws", action="store_true", help="Collect read-only AWS inventory.")
     parser.add_argument("--profile", help="AWS CLI profile name for AWS mode.")
+    parser.add_argument("--all-regions", action="store_true", help="Scan all regions returned by the AWS EC2 region catalog.")
     parser.add_argument("--region", default="ap-south-1", help="AWS region (default: ap-south-1).")
     parser.add_argument("--lookback-days", type=int, default=14,
                         help="Hourly CloudWatch CPU lookback (1-90 days).")
@@ -111,7 +112,12 @@ def main() -> None:
         return
 
     def scan_once() -> None:
-        payload = collect_inventory(args.profile, args.region, args.lookback_days)
+        if args.all_regions:
+            payload = collect_all_regions(args.profile, args.lookback_days)
+            if payload.get("region_scan_errors"):
+                print("WARNING: Some regions could not be scanned; inspect JSON report.")
+        else:
+            payload = collect_inventory(args.profile, args.region, args.lookback_days)
         payload["dashboard_refresh_seconds"] = args.refresh_seconds if args.watch else None
         if args.cost_explorer:
             payload["cost_explorer"] = get_cost_summary(
