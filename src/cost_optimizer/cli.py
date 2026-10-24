@@ -30,13 +30,24 @@ def main() -> None:
     source.add_argument("--aws", action="store_true", help="Collect read-only AWS inventory.")
     parser.add_argument("--profile", help="AWS CLI profile name for AWS mode.")
     parser.add_argument("--region", default="ap-south-1", help="AWS region (default: ap-south-1).")
+    parser.add_argument(
+        "--lookback-days", type=int, default=14,
+        help="Hourly CloudWatch CPU lookback for AWS mode (1-90 days; default: 14).",
+    )
+    parser.add_argument("--cpu-low-threshold", type=float, default=5.0,
+                        help="Flag CPU averages at or below this percentage (default: 5).")
     parser.add_argument("--output", type=Path, default=Path("reports/cost-report.json"))
     args = parser.parse_args()
+    if not 0.0 <= args.cpu_low_threshold <= 100.0:
+        parser.error("--cpu-low-threshold must be between 0 and 100")
     if args.aws:
-        payload = collect_inventory(args.profile, args.region)
+        if not 1 <= args.lookback_days <= 90:
+            parser.error("--lookback-days must be between 1 and 90")
+        payload = collect_inventory(args.profile, args.region, args.lookback_days)
     else:
         payload = _load_json(args.input)
         payload.setdefault("mode", "local_fixture")
+    payload["cpu_low_threshold_percent"] = args.cpu_low_threshold
     findings = analyze_inventory(payload)
     report = build_report(payload, findings)
     args.output.parent.mkdir(parents=True, exist_ok=True)
