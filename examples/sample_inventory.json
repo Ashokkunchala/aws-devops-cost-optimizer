@@ -1,0 +1,27 @@
+{
+  "mode": "local_fixture",
+  "region": "ap-south-1",
+  "ec2_instances": [
+    {
+      "instance_id": "i-example-running-001",
+      "state": "running",
+      "instance_type": "t3.small",
+      "tags": {"Environment": "dev"}
+    },
+    {
+      "instance_id": "i-example-stopped-002",
+      "state": "stopped",
+      "instance_type": "t3.micro",
+      "tags": {"Owner": "platform-team", "Environment": "test"}
+    }
+  ],
+  "ebs_volumes": [
+    {
+      "volume_id": "vol-example-unattached-001",
+      "state": "available",
+      "size_gib": 50,
+      "volume_type": "gp3",
+      "tags": {"Owner": "platform-team"}
+    }
+  ]
+}
