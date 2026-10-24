@@ -52,9 +52,11 @@ def collect_inventory(
     session = boto3.Session(profile_name=profile, region_name=region)
     ec2 = session.client("ec2")
     cloudwatch = session.client("cloudwatch")
+    sts = session.client("sts")
     instances: list[dict[str, Any]] = []
     volumes: list[dict[str, Any]] = []
     try:
+        identity = sts.get_caller_identity()
         for page in ec2.get_paginator("describe_instances").paginate():
             for reservation in page.get("Reservations", []):
                 for item in reservation.get("Instances", []):
@@ -85,6 +87,8 @@ def collect_inventory(
     return {
         "mode": "aws_read_only",
         "region": region,
+        "account_id": identity.get("Account"),
+        "identity_arn": identity.get("Arn"),
         "lookback_days": lookback_days,
         "ec2_instances": instances,
         "ebs_volumes": volumes,
