@@ -1,23 +1,19 @@
-# Roadmap
+# Delivery status and roadmap
 
-## Phase 1 — local rules and reports
-- Synthetic JSON, deterministic review findings, report schema, tests, and CI.
+## Implemented in this release
+- Local synthetic JSON input and deterministic findings.
+- Read-only EC2/EBS inventory.
+- Hourly CloudWatch CPU summaries over a bounded lookback.
+- Optional Cost Explorer actual unblended cost by service.
+- JSON reports and self-contained HTML reports.
+- Unit tests and GitHub Actions CI on Python 3.11 and 3.12.
+- Optional Terraform monthly budget-alert example (never auto-applied).
 
-## Phase 2 — AWS inventory
-- Read-only regional EC2/EBS inventory through Boto3.
-- Least-privilege IAM and credential guidance.
+## Next recommended work
+1. Add validated CUR CSV/Parquet schemas and reconciliation against Cost Explorer.
+2. Add pricing-aware estimates only when region, instance family, operating system, tenancy, usage, discount, and commitment data are known.
+3. Add S3 inventory and lifecycle review with pagination, request-volume warnings, and object-retention safeguards.
+4. Add a web dashboard only if a hosting target and authentication model are selected.
+5. If remediation is ever added, use dry-run, allowlists, explicit human approval, audit trail, and recovery procedures.
 
-## Phase 3 — billing-aware estimates
-- Support defined Cost Explorer exports and CUR/Athena result schemas.
-- Track currency, region, usage period, and price source.
-- Separate estimates from observed billed cost.
-
-## Phase 4 — utilization recommendations
-- Configurable CloudWatch lookback windows.
-- Explain metric coverage and missing data.
-- Evidence thresholds and workload exclusions.
-
-## Phase 5 — guarded automation
-- Dry-run, allowlists, environment protection, human approval, audit trail.
-- Separate remediation permissions from scanner role.
-- Recovery and rollback guidance.
+No remediation or cloud resource provisioning is part of the current scanner.
