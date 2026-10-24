@@ -1,79 +1,74 @@
 # AWS DevOps Cost Optimizer
 
-A free-first, safety-first FinOps toolkit for AWS and DevOps teams. It helps identify potential waste, generate reviewable reports, and build repeatable cost-control practices without automatically changing production infrastructure.
+A free-first, safety-first FinOps toolkit for AWS and DevOps teams. It inventories EC2/EBS, reviews CPU utilization, optionally queries actual AWS Cost Explorer charges, and creates JSON plus self-contained HTML reports.
 
-> **Default posture: read-only.** The initial scanner inventories EC2/EBS resources and reports candidates for human review. It does not stop, resize, detach, or delete resources. Cost estimates must be checked against your account pricing, discounts, region, and usage.
+**Default posture: read-only.** It never stops, resizes, detaches, or deletes resources. It does not invent savings estimates.
 
-## Goals
+## Features
+- Local synthetic mode for learning and tests without AWS access.
+- Regional EC2/EBS inventory with unattached-volume and ownership-tag findings.
+- Hourly CloudWatch CPU averages/maxima for running instances over a bounded 1–90 day window.
+- Optional AWS Cost Explorer actual UnblendedCost by service.
+- JSON output and optional HTML report with escaped resource values.
+- Least-privilege guidance, unit tests, and GitHub Actions CI.
+- Optional Terraform monthly budget alert example, never auto-applied.
 
-- Find likely optimization opportunities for EC2 and EBS, including a CPU lookback signal.
-- Report candidates with evidence and caveats.
-- Run locally with synthetic data and no AWS resources.
-- Use least-privilege credentials, tests, and CI.
-- Add billing-data analysis later through explicit Cost Explorer or CUR inputs.
-- Keep remediation separate and approval-gated.
+## Quick start without AWS
 
-## Quick start (no AWS account needed)
+Requires Python 3.11+.
 
-Requirements: Python 3.11+.
-
-```bash
-python -m venv .venv
-# Linux/macOS
-source .venv/bin/activate
-# Windows PowerShell: .\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
-pytest
-python -m cost_optimizer --input examples/sample_inventory.json --output reports/sample-report.json
-```
+    python -m venv .venv
+    # Linux/macOS: source .venv/bin/activate
+    # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+    python -m pip install -e ".[dev]"
+    pytest
+    python -m cost_optimizer --input examples/sample_inventory.json --output reports/sample-report.json --html-output reports/sample-report.html
 
 The sample input is synthetic. No AWS calls are made in local mode.
 
-## Read-only AWS scan
+## Read-only AWS inventory
 
-1. Configure AWS credentials using an approved local profile or IAM Identity Center. Never put keys in source files.
-2. Start with the narrow read-only policy in [docs/iam-read-only.md](docs/iam-read-only.md).
-3. Run a regional inventory:
+Configure an approved AWS CLI profile or IAM Identity Center role. Do not put access keys in source files.
 
-```bash
-aws sts get-caller-identity --profile cost-audit
-python -m cost_optimizer --aws --profile cost-audit --region ap-south-1 --output reports/aws-report.json
-```
+    aws sts get-caller-identity --profile cost-audit
+    python -m pip install -e ".[aws]"
+    python -m cost_optimizer --aws --profile cost-audit --region ap-south-1 --lookback-days 14 --output reports/aws-report.json --html-output reports/aws-report.html
 
-AWS mode uses EC2 Describe APIs plus hourly CloudWatch CPU summaries for running instances over a bounded 1–90 day lookback. For example, add `--lookback-days 14`. This increases read API calls with instance count; review API limits and operational cadence. Low CPU is a review signal only, not sufficient evidence to resize. Never use root credentials.
+## Include actual billing costs
 
-## Report fields
+Enable the optional Cost Explorer query and provide ISO dates. Start is inclusive and end is exclusive, matching the AWS API.
 
-Findings include resource ID, type, severity, evidence, recommendation, and estimate status. Savings amounts are **not fabricated**: estimates remain unavailable unless validated pricing and usage data are supplied. Recommendations are not proof that a resource is safe to change.
+    python -m cost_optimizer --aws --profile cost-audit --region ap-south-1 --lookback-days 14 --cost-explorer --cost-start-date 2026-10-01 --cost-end-date 2026-11-01 --output reports/aws-cost-report.json --html-output reports/aws-cost-report.html
 
-## Project layout
+The billing query requires the IAM action ce:GetCostAndUsage. Cost Explorer is queried in us-east-1. Returned figures are actual unblended costs as currently reported by Cost Explorer, not guaranteed final invoice amounts or savings; data may be delayed. Review AWS pricing and account permissions before use.
 
-- `src/cost_optimizer/` — CLI, rules, AWS read-only collector, report generator.
-- `examples/` — synthetic input for testing without AWS.
-- `tests/` — deterministic tests; no live cloud calls.
-- `docs/` — IAM, safety, roadmap.
-- `terraform/` — optional budget-alert example, not applied automatically.
-- `.github/workflows/ci.yml` — test and lint checks.
+## Findings and limitations
+- A stopped instance is a review prompt; its EBS volumes and snapshots may still cost money.
+- An unattached EBS volume may be intentional or required for recovery. Never delete it based on the finding alone.
+- Low CPU is only a screening signal. Check memory, network, disk I/O, CPU credits, workload seasonality, autoscaling, and business schedules before resizing.
+- Missing metrics are not treated as zero.
+- Savings estimates remain null until supported by validated region-specific pricing, usage, discount, and commitment data.
+- Reports may include resource IDs and inventory metadata. Keep them private; do not commit real-account reports.
 
-## Cost safety
+## IAM
 
-- Do not deploy Terraform until you inspect the plan and understand the current service pricing.
-- AWS Budgets and other billing features may have eligibility, usage, or pricing constraints; verify before use.
-- The Terraform example is optional and does not create compute or networking.
-- Never enable destructive remediation based on one metric or a generic recommendation.
-- Validate ownership, criticality, dependencies, backups, maintenance windows, and approvals before changing resources.
+See docs/iam-read-only.md. Keep billing access optional and separate from inventory access if that better fits your security model.
+
+## Project structure
+- src/cost_optimizer/ — scanner, Cost Explorer query, rule engine, report generation.
+- examples/ — synthetic fixtures.
+- tests/ — unit tests; no live cloud calls.
+- docs/ — safety and IAM guidance.
+- terraform/budget-alert/ — optional budget notification example.
+
+## Safety
+
+No AWS infrastructure has to be created to run the scanner. Terraform is not applied by CI. Inspect any Terraform plan and current AWS pricing before opting into the budget example. There is no destructive remediation in this project.
 
 ## Roadmap
 
-1. [x] Local JSON input, rule engine, JSON report, and tests.
-2. [x] Read-only EC2/EBS inventory and bounded hourly CPU lookback.
-3. [x] CI for tests and lint.
-4. [x] Optional budget-alert Terraform example.
-5. [ ] Parse Cost Explorer exports / CUR Athena results.
-6. [ ] Pricing-aware estimates with region and effective dates.
-7. [ ] Utilization recommendations using a configurable historical window.
-8. [ ] Approval-gated remediation with dry-run, allowlists, audit records, and recovery guidance.
+See docs/roadmap.md for delivery status and next work.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see LICENSE.
