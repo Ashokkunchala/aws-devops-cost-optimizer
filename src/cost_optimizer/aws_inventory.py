@@ -65,6 +65,7 @@ def collect_inventory(
                     state = item.get("State", {}).get("Name", "unknown")
                     entry: dict[str, Any] = {
                         "instance_id": instance_id,
+                        "region": region,
                         "state": state,
                         "instance_type": item.get("InstanceType"),
                         "tags": tags,
@@ -77,6 +78,7 @@ def collect_inventory(
                 tags = {tag["Key"]: tag.get("Value", "") for tag in item.get("Tags", [])}
                 volumes.append({
                     "volume_id": item.get("VolumeId", "unknown"),
+                    "region": region,
                     "state": item.get("State", "unknown"),
                     "size_gib": item.get("Size"),
                     "volume_type": item.get("VolumeType"),
@@ -90,6 +92,45 @@ def collect_inventory(
         "account_id": identity.get("Account"),
         "identity_arn": identity.get("Arn"),
         "lookback_days": lookback_days,
+        "ec2_instances": instances,
+        "ebs_volumes": volumes,
+    }
+
+
+
+def collect_all_regions(profile: str | None, lookback_days: int = 14) -> dict[str, Any]:
+    """Scan all regions returned by EC2's region catalog; record per-region failures."""
+    try:
+        import boto3
+        from botocore.exceptions import BotoCoreError, ClientError
+    except ImportError as exc:
+        raise RuntimeError(
+            'AWS mode requires optional dependencies. Install with: pip install -e ".[aws]"'
+        ) from exc
+    session = boto3.Session(profile_name=profile)
+    regions = sorted(session.get_available_regions("ec2"))
+    instances: list[dict[str, Any]] = []
+    volumes: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    account_id = None
+    identity_arn = None
+    for region in regions:
+        try:
+            regional = collect_inventory(profile, region, lookback_days)
+            account_id = account_id or regional.get("account_id")
+            identity_arn = identity_arn or regional.get("identity_arn")
+            instances.extend(regional.get("ec2_instances", []))
+            volumes.extend(regional.get("ebs_volumes", []))
+        except (RuntimeError, BotoCoreError, ClientError) as exc:
+            errors.append({"region": region, "error": str(exc)})
+    return {
+        "mode": "aws_read_only",
+        "region": "all-enabled-regions",
+        "account_id": account_id,
+        "identity_arn": identity_arn,
+        "lookback_days": lookback_days,
+        "regions_attempted": regions,
+        "region_scan_errors": errors,
         "ec2_instances": instances,
         "ebs_volumes": volumes,
     }
