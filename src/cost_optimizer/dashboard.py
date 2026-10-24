@@ -158,5 +158,5 @@ h1{font-size:clamp(20px,2.2vw,32px);letter-spacing:.17em;text-align:center;color
 </div></section>
 <section class="panel"><div class="panel-head">Recent insights</div><div class="panel-body"><div class="alert"><span class="alert-icon">▣</span><div><strong class="sev-info">Billing</strong><p>""" + ("Actual cost data is included." if costs else "Run with --cost-explorer to load actual cost data.") + """</p></div></div><div class="alert"><span class="alert-icon">⌁</span><div><strong class="sev-info">Resource review</strong><p>Use the findings table to inspect each recommendation before taking action.</p></div></div><div class="alert"><span class="alert-icon">✓</span><div><strong class="sev-info">Safety status</strong><p>Mutations performed: no. Human review required: yes.</p></div></div></div></section>
 </aside>
-</div><footer class="footnote"><span>DATA AS OF: """ + generated + """ · REGION: """ + region + """</span><span>NO MUTATIONS PERFORMED · REVIEW BEFORE ACTION</span></footer></div></body></html>
+</div><footer class="footnote"><span>DATA AS OF: """ + generated + """ · REGION: """ + region + """</span><span>Mutations performed: no · Human review required: yes · Review before action</span></footer></div></body></html>
 """
