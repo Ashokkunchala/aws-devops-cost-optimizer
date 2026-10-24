@@ -5,7 +5,7 @@ from typing import Any
 
 
 def build_report(payload: dict[str, Any], findings: list[dict[str, Any]]) -> dict[str, Any]:
-    return {
+    report = {
         "schema_version": "1.0",
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": payload.get("mode", "local_fixture"),
@@ -23,3 +23,6 @@ def build_report(payload: dict[str, Any], findings: list[dict[str, Any]]) -> dic
         "findings": findings,
         "safety": {"mutations_performed": False, "human_review_required": True},
     }
+    if payload.get("cost_explorer"):
+        report["cost_explorer"] = payload["cost_explorer"]
+    return report
