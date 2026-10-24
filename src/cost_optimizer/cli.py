@@ -1,6 +1,4 @@
-"""Command-line interface."""
-
-from __future__ import annotations
+"""Command-line interface for local fixtures and read-only AWS inventory."""
 
 import argparse
 import json
@@ -26,9 +24,7 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Read-only AWS cost optimization inventory and report tool."
-    )
+    parser = argparse.ArgumentParser(description="Read-only AWS cost optimization inventory.")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--input", type=Path, help="Local JSON inventory fixture.")
     source.add_argument("--aws", action="store_true", help="Collect read-only AWS inventory.")
@@ -36,13 +32,11 @@ def main() -> None:
     parser.add_argument("--region", default="ap-south-1", help="AWS region (default: ap-south-1).")
     parser.add_argument("--output", type=Path, default=Path("reports/cost-report.json"))
     args = parser.parse_args()
-
     if args.aws:
         payload = collect_inventory(args.profile, args.region)
     else:
         payload = _load_json(args.input)
         payload.setdefault("mode", "local_fixture")
-
     findings = analyze_inventory(payload)
     report = build_report(payload, findings)
     args.output.parent.mkdir(parents=True, exist_ok=True)

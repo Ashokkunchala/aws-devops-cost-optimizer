@@ -1,7 +1,5 @@
 """Report rendering helpers."""
 
-from __future__ import annotations
-
 from datetime import datetime, timezone
 from typing import Any
 
@@ -18,8 +16,8 @@ def build_report(payload: dict[str, Any], findings: list[dict[str, Any]]) -> dic
             "findings": len(findings),
             "estimated_monthly_savings": None,
             "estimate_note": (
-                "Not calculated: validated, region-specific pricing and workload data are required. "
-                "Do not treat recommendations as guaranteed savings."
+                "Not calculated: validated region-specific pricing and workload data are required. "
+                "Recommendations are not guaranteed savings."
             ),
         },
         "findings": findings,

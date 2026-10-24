@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aws-devops-cost-optimizer"
 version = "0.1.0"
-description = "A free-first, read-only AWS and DevOps cost optimization toolkit"
+description = "Free-first, read-only AWS and DevOps cost optimization toolkit"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

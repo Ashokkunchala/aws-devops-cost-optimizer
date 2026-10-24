@@ -1,25 +1,23 @@
 # Roadmap
 
 ## Phase 1 — local rules and reports
-- Synthetic JSON input, deterministic review findings, report schema, unit tests, CI.
+- Synthetic JSON, deterministic review findings, report schema, tests, and CI.
 
 ## Phase 2 — AWS inventory
 - Read-only regional EC2/EBS inventory through Boto3.
-- Minimal IAM policy and credential guidance.
-- Pagination and error handling.
+- Least-privilege IAM and credential guidance.
 
 ## Phase 3 — billing-aware estimates
-- Define supported schemas for Cost Explorer exports and CUR/Athena results.
-- Track currency, region, period, and price source.
-- Separate estimates from observed billed cost and validate against fixtures.
+- Support defined Cost Explorer exports and CUR/Athena result schemas.
+- Track currency, region, usage period, and price source.
+- Separate estimates from observed billed cost.
 
 ## Phase 4 — utilization recommendations
 - Configurable CloudWatch lookback windows.
 - Explain metric coverage and missing data.
-- Use evidence thresholds and workload exclusions.
+- Evidence thresholds and workload exclusions.
 
 ## Phase 5 — guarded automation
-- Dry-run first; allowlists and environment protection.
-- Human approval and audit trail.
-- Separate remediation role and permissions.
-- Document recovery and rollback.
+- Dry-run, allowlists, environment protection, human approval, audit trail.
+- Separate remediation permissions from scanner role.
+- Recovery and rollback guidance.
