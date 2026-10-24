@@ -42,7 +42,7 @@ Enable the optional Cost Explorer query and provide ISO dates. Start is inclusiv
 
 The billing query requires the IAM action ce:GetCostAndUsage. Cost Explorer is queried in us-east-1. Returned figures are actual unblended costs as currently reported by Cost Explorer, not guaranteed final invoice amounts or savings; data may be delayed. Review AWS pricing and account permissions before use.
 
-## Findings and limitations
+## Cost Lab: compare lower-cost architectures\n\nSee [docs/cost-lab-blueprints.md](docs/cost-lab-blueprints.md) for environment-specific patterns for dev, test, staging, and production; a full cost-component checklist; missing-service/integration audit requirements; and a safe remediation lifecycle. The current implementation is not yet a full architecture simulator or auto-remediation engine.\n\n## Findings and limitations
 - A stopped instance is a review prompt; its EBS volumes and snapshots may still cost money.
 - An unattached EBS volume may be intentional or required for recovery. Never delete it based on the finding alone.
 - Low CPU is only a screening signal. Check memory, network, disk I/O, CPU credits, workload seasonality, autoscaling, and business schedules before resizing.
