@@ -1,14 +1,8 @@
 # Optional AWS Budget Alert
 
-This example creates a monthly AWS cost budget with email notifications. It is not applied by CI and is not required to use the scanner.
+Creates an AWS monthly cost budget with email notifications. It is not applied by CI and is not required to use the scanner.
 
-## Before use
-
-- Review current AWS Budgets pricing, eligibility, and account limits.
-- Replace the placeholder email in `terraform.tfvars`.
-- Review `terraform plan` and validate currency/account scope.
-- The recipient may need to confirm notification subscription.
-- This example creates no compute or networking resources.
+Before use, review current AWS Budgets pricing, eligibility, and account limits. Set a real recipient email, inspect the Terraform plan, and confirm currency/account scope. The recipient may need to confirm the notification subscription. This example creates no compute or networking.
 
 ```bash
 terraform init
